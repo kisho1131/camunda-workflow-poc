@@ -1,11 +1,10 @@
 import { marked } from 'marked';
 
-async function copyMarkdownAsRichText(markdown: string) {
-  try {
-    // Convert Markdown → HTML
-    const htmlContent = marked.parse(markdown);
+export async function copyMarkdownToClipboard(markdown: string): Promise<string> {
+  // Convert Markdown → HTML
+  const htmlContent = marked.parse(markdown);
 
-    // Create clipboard items for both HTML and plain text
+  try {
     const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
     const textBlob = new Blob([markdown], { type: 'text/plain' });
 
@@ -14,10 +13,12 @@ async function copyMarkdownAsRichText(markdown: string) {
       'text/plain': textBlob
     });
 
-    // Write to clipboard (requires user interaction)
     await navigator.clipboard.write([clipboardItem]);
-    alert('Copied Markdown as formatted text!');
-  } catch (error) {
-    console.error('❌ Copy failed:', error);
+    console.log('✅ Copied as rich text');
+  } catch (err) {
+    console.error('❌ Copy failed:', err);
   }
+
+  // Return the final HTML string
+  return htmlContent;
 }
