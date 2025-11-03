@@ -1,71 +1,30 @@
-<thead>
-<tr>
-<th>Group</th>
-<th>Book value - Previous Month-end (mtdBookValue)</th>
-<th>Book value - Actual (currentBookValue)</th>
-<th>Book value - Prior (priorBookValue)</th>
-<th>DoD Variance (dodVariance)</th>
-<th>MoM Variance (mtdVariance)</th>
-</tr>
-</thead>
-<tbody>
-<#-- Iterate over L1 nodes (The root list returned by the Java function) -->
-<#list hierarchyData as lvl1> <#-- Assuming the data model passes the resulting list as 'hierarchyData' -->
-<tr style="background-color: #F2F2F2; font-weight: bold;">
-<td class="description">${lvl1.description}</td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl1.mtdBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl1.currentBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl1.priorBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl1.dodVariance/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl1.mtdVariance/></td>
-</tr>
+import { marked } from 'marked';
 
-<#-- Check if L1 has L2 children -->
-<#if lvl1.children?has_content>
-<#list lvl1.children as lvl2>
-<tr style="background-color: #fafafa;">
-<td class="description">    ${lvl2.description}</td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl2.mtdBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl2.currentBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl2.priorBookValue/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl2.dodVariance/></td>
-<td style="text-align: right; padding: 6px;">@formatNumber num=lvl2.mtdVariance/></td>
-</tr>
+async function copyMarkdownAsRichText(markdown: string) {
+  try {
+    // Convert Markdown → HTML
+    const htmlContent = marked.parse(markdown);
 
-    <#-- Check if L2 has L3 children -->
-    <#if lvl2.children?has_content>
-        <#list lvl2.children as lvl3>
-            <tr style="background-color: #ffffff;">
-                <td class="description">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${lvl3.description}</td>
-                <td style="text-align: right; padding: 6px;">@formatNumber num=lvl3.mtdBookValue/></td>
-                <td style="text-align: right; padding: 6px;">@formatNumber num=lvl3.currentBookValue/></td>
-                <td style="text-align: right; padding: 6px;">@formatNumber num=lvl3.priorBookValue/></td>
-                <td style="text-align: right; padding: 6px;">@formatNumber num=lvl3.dodVariance/></td>
-                <td style="text-align: right; padding: 6px;">@formatNumber num=lvl3.mtdVariance/></td>
-            </tr>
+    // Optional: Add minimal styling for better readability in Outlook
+    const styledHtml = `
+      <div style="font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6;">
+        ${htmlContent}
+      </div>
+    `;
 
-            <#-- L3 children are the original L5 records (leaf nodes). You can optionally display these: -->
-            <#if lvl3.children?has_content>
-                <#-- If you want to show the L5 details uncomment the block below -->
-                <#--
-                <#list lvl3.children as lvl5>
-                    <tr style="background-color: #f7f7f7;">
-                        <td class="description">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${lvl5.pmfAcctLvl5Desc}</td>
-                        <td style="text-align: right; padding: 6px;">@formatNumber num=lvl5.mtdBookValue/></td>
-                        <td style="text-align: right; padding: 6px;">@formatNumber num=lvl5.currentBookValue/></td>
-                        <td style="text-align: right; padding: 6px;">@formatNumber num=lvl5.priorBookValue/></td>
-                        <td style="text-align: right; padding: 6px;">@formatNumber num=lvl5.dodVariance/></td>
-                        <td style="text-align: right; padding: 6px;">@formatNumber num=lvl5.mtdVariance/></td>
-                    </tr>
-                </#list>
-                -->
-            </#if>
-        </#list>
-    </#if>
-</#list>
+    // Create clipboard content (HTML + plain text)
+    const htmlBlob = new Blob([styledHtml], { type: 'text/html' });
+    const textBlob = new Blob([markdown], { type: 'text/plain' });
 
-</#if>
+    const item = new ClipboardItem({
+      'text/html': htmlBlob,
+      'text/plain': textBlob
+    });
 
-</#list>
-
-</tbody>
+    // Copy to clipboard
+    await navigator.clipboard.write([item]);
+    alert('Copied formatted Markdown!');
+  } catch (err) {
+    console.error('Copy failed', err);
+  }
+}
