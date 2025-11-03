@@ -5,26 +5,19 @@ async function copyMarkdownAsRichText(markdown: string) {
     // Convert Markdown → HTML
     const htmlContent = marked.parse(markdown);
 
-    // Optional: Add minimal styling for better readability in Outlook
-    const styledHtml = `
-      <div style="font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6;">
-        ${htmlContent}
-      </div>
-    `;
-
-    // Create clipboard content (HTML + plain text)
-    const htmlBlob = new Blob([styledHtml], { type: 'text/html' });
+    // Create clipboard items for both HTML and plain text
+    const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
     const textBlob = new Blob([markdown], { type: 'text/plain' });
 
-    const item = new ClipboardItem({
+    const clipboardItem = new ClipboardItem({
       'text/html': htmlBlob,
       'text/plain': textBlob
     });
 
-    // Copy to clipboard
-    await navigator.clipboard.write([item]);
-    alert('Copied formatted Markdown!');
-  } catch (err) {
-    console.error('Copy failed', err);
+    // Write to clipboard (requires user interaction)
+    await navigator.clipboard.write([clipboardItem]);
+    alert('Copied Markdown as formatted text!');
+  } catch (error) {
+    console.error('❌ Copy failed:', error);
   }
 }
